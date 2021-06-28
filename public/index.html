@@ -96,13 +96,13 @@
 
             if (isMouseDown) {
                 if (prevMousePos) {
-                    //ctx.beginPath();
-                    //ctx.moveTo(prevMousePos.x, prevMousePos.y);
-                    //ctx.lineTo(newMousePos.x, newMousePos.y);
-                    //ctx.strokeStyle = currentColor;
-                    //ctx.lineWidth = currentWidth;
-                    //ctx.lineCap = "round";
-                    //ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(prevMousePos.x, prevMousePos.y);
+                    ctx.lineTo(newMousePos.x, newMousePos.y);
+                    ctx.strokeStyle = currentColor;
+                    ctx.lineWidth = currentWidth;
+                    ctx.lineCap = "round";
+                    ctx.stroke();
 
                     socket.emit(eventNames.draw, {
                         prevDrawPosX: prevMousePos.x + inf_ctx.position.x,
