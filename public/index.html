@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>board</title>
+
+    <script type="text/javascript"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="public/draw_board.js"></script>
+    <style>
+        body {
+            overflow: hidden;
+            background-color: black;
+        }
+
+        canvas {
+            background-color: white;
+            border: 1px solid blue;
+            cursor: pointer;
+        }
+
+        #colorPicker {
+            background-color: black;
+            float: right;
+            width: 60px;
+            border-color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <input id="width" type="range" min="1" max="40" step="1" value="5">
+    <input id="colorPicker" type="color" value="#ff0000"></input>
+
+    <script>
+        var
+            canvas = document.createElement("canvas"),
+            ctx = canvas.getContext("2d");
+
+        document.body.appendChild(canvas);
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        var
+            inf_ctx = infiniteCanvas.init(ctx),
+
+            socket = io(),
+            eventNames = {
+                draw: 'draw',
+                stopDraw: 'stopDraw'
+            },
+
+            isMouseDown = false,
+            isMiddleRightDown = false,
+            prevMousePos,
+
+            currentColor = '#ff0000',
+            currentWidth = 3;
+
+
+        document.getElementById('colorPicker').addEventListener("change", function (event) {
+            currentColor = event.target.value;
+        });
+
+        document.getElementById('width').addEventListener("change", function (event) {
+            currentWidth = event.target.value;
+        });
+
+
+
+
+
+
+
+
+        canvas.addEventListener("mousedown", function (event) {
+            if (event.which === 1)
+                isMouseDown = true;
+            else
+                isMiddleRightDown = true;
+        });
+
+        window.addEventListener("mouseup", function (event) {
+            if (event.which === 1) {
+                isMouseDown = false;
+                inf_ctx.partsUpdate();
+                socket.emit(eventNames.stopDraw, true);
+            }
+            else
+                isMiddleRightDown = false;
+        });
+
+        window.addEventListener("mousemove", function (event) {
+            var newMousePos = { x: event.offsetX, y: event.offsetY };
+
+            if (isMouseDown) {
+                if (prevMousePos) {
+                    //ctx.beginPath();
+                    //ctx.moveTo(prevMousePos.x, prevMousePos.y);
+                    //ctx.lineTo(newMousePos.x, newMousePos.y);
+                    //ctx.strokeStyle = currentColor;
+                    //ctx.lineWidth = currentWidth;
+                    //ctx.lineCap = "round";
+                    //ctx.stroke();
+
+                    socket.emit(eventNames.draw, {
+                        prevDrawPosX: prevMousePos.x + inf_ctx.position.x,
+                        prevDrawPosY: prevMousePos.y + inf_ctx.position.y,
+                        newDrawPosX: newMousePos.x + inf_ctx.position.x,
+                        newDrawPosY: newMousePos.y + inf_ctx.position.y,
+                        lineColor: currentColor,
+                        lineWidth: currentWidth
+                    });
+                }
+            } else
+                if (isMiddleRightDown) {
+                    var dX = prevMousePos.x - newMousePos.x;
+                    var dY = prevMousePos.y - newMousePos.y;
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    inf_ctx.moveBy(dX, dY);
+                }
+
+            prevMousePos = newMousePos;
+        });
+
+        socket.on(eventNames.draw, function (data) {
+            var
+                dX = inf_ctx.position.x,
+                dY = inf_ctx.position.y,
+                newDrawPosX = data.newDrawPosX - dX,
+                newDrawPosY = data.newDrawPosY - dY,
+                prevDrawPosX = data.prevDrawPosX - dX,
+                prevDrawPosY = data.prevDrawPosY - dY;
+
+            if (newDrawPosX >= 0 && newDrawPosX <= inf_ctx.canvas.width &&
+                newDrawPosY >= 0 && newDrawPosY <= inf_ctx.canvas.height ||
+                prevDrawPosX >= 0 && prevDrawPosX <= inf_ctx.canvas.width &&
+                prevDrawPosY >= 0 && prevDrawPosY <= inf_ctx.canvas.height) {
+                ctx.beginPath();
+                ctx.moveTo(prevDrawPosX, prevDrawPosY);
+                ctx.lineTo(newDrawPosX, newDrawPosY);
+                ctx.strokeStyle = data.lineColor;
+                ctx.lineWidth = data.lineWidth;
+                ctx.lineCap = "round";
+                ctx.stroke();
+            }
+        });
+
+        socket.on(eventNames.stopDraw, function (data) {
+            if (data)
+                inf_ctx.partsUpdate();
+        });
+    </script>
+</body>
+
+</html>
