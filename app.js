@@ -40,8 +40,8 @@ io.on('connection', function (socket) {
 
 //setInterval(() => { io.emit("saveData", { flag: flag }) }, 1000);
 
-http.listen(3000, "192.168.30.22", function () {
-    console.log('listening on 192.168.30.22:3000');
+http.listen(3000, function () {
+    console.log('listening on *:3000');
 });
 
 /*
